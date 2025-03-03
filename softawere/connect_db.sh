@@ -94,6 +94,7 @@ do
 
         "Exit")
             echo "Exiting..."
+            ../../softawere/database.sh
             break
             ;;
         

@@ -1,40 +1,65 @@
 #!/usr/bin/bash
-echo "Update a table selected."
-# Update logic
-echo "Enter the database name: "
-read dbname
-echo "Enter the table name: "
+
+# Ensure dbname is set
+if [[ -z "$dbname" ]]; then
+    echo "No database selected. Please connect to a database first."
+    exit 1
+fi
+
+DB_PATH="../../databases/$dbname"
+
+echo "Available tables in '$dbname':"
+ls -1 "$DB_PATH"
+
+echo "Enter the name of the table you want to update:"
 read tablename
-if ! [ -f ../../databases/$dbname/$tablename ]; then
-     echo "Table '$tablename' does not exist."
-     return
+
+TABLE_FILE="$DB_PATH/$tablename"
+METADATA_FILE="$DB_PATH/${tablename}_metadata"
+
+# Check if table exists
+if [[ ! -f "$TABLE_FILE" ]]; then
+    echo "Table '$tablename' does not exist."
+    exit 1
 fi
 
-echo "Enter the column name to update: "
-read colName
-echo "Enter the old value: "
-read oldVal
-echo "Enter the new value: "
-read newVal
+# Display table data
+echo "Current data in '$tablename':"
+cat "$TABLE_FILE"
 
-# Check if the column exists
-header=$(head -n 1 ../../databases/$dbname/$tablename)
-if ! echo "$header" | grep -q "$colName"; then
-     echo "Column '$colName' does not exist."
-     return
+# Read column names from metadata
+columns=($(awk -F '|' '{print $1}' "$METADATA_FILE"))
+
+echo "Enter the primary key value of the row to update:"
+read pk_value
+
+# Find the row with the primary key
+row_index=$(awk -F '|' -v pk="$pk_value" '$1 == pk {print NR}' "$TABLE_FILE")
+
+if [[ -z "$row_index" ]]; then
+    echo "No row found with primary key '$pk_value'."
+    exit 1
 fi
 
-# Get the column index
-colIndex=$(echo "$header" | tr ',' '\n' | grep -n "^$colName$" | cut -d: -f1)
+# Ask user for new values for each column
+new_values=()
+for ((i = 0; i < ${#columns[@]}; i++)); do
+    col="${columns[$i]}"
+    echo "Enter new value for $col (leave empty to keep current value):"
+    read new_value
+    if [[ -n "$new_value" ]]; then
+        new_values+=("$new_value")
+    else
+        # Keep existing value
+        old_value=$(awk -F '|' -v row="$row_index" 'NR == row {print $0}' "$TABLE_FILE" | cut -d '|' -f $((i + 1)))
+        new_values+=("$old_value")
+    fi
+done
 
-# Update the data in the specified column
-awk -F, -v col="$colIndex" -v old="$oldVal" -v new="$newVal" 'BEGIN {OFS=FS} NR==1 {print $0} NR>1 {if ($col == old) $col = new; print $0}' ../../databases/$dbname/$tablename > temp && mv temp ../../databases/$dbname/$tablename
+# Convert array to string with | separator
+new_row=$(IFS="|"; echo "${new_values[*]}")
 
-echo "Data updated successfully."
+# Replace the old row with new values (preserving | separator)
+awk -F '|' -v row="$row_index" -v new_row="$new_row" 'BEGIN {OFS="|"} {if (NR == row) print new_row; else print}' "$TABLE_FILE" > "$TABLE_FILE.tmp" && mv "$TABLE_FILE.tmp" "$TABLE_FILE"
 
-# Verify if the update was successful
-if grep -q "$newVal" ../../databases/$dbname/$tablename; then
-     echo "Update verified successfully."
-else
-     echo "Update failed."
-fi
+echo "Row updated successfully."
