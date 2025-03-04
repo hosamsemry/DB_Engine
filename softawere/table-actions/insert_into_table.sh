@@ -30,8 +30,18 @@ if [[ "$idColType" == "int" ]]; then
     fi
     row="$newID$sep"
 else
-    echo -e "$idColName ($idColType): \c"
-    read idData
+    while true; do
+        echo -e "$idColName ($idColType): \c"
+        read idData
+        if [[ -z "$idData" ]] || ! [[ "$idData" =~ ^[0-9]+$ ]]; then
+            echo "Invalid data! Must be a non-empty integer."
+        elif grep -q "^$idData$sep" ../../databases/$dbname/$tablename; then
+            echo "ID '$idData' already exists. Please use a unique ID."
+        else
+            break
+        fi
+    done
+
     row="$idData$sep"
 fi
 
@@ -45,6 +55,12 @@ for (( i = 2; i <= $colsNum; i++ )); do
     if [[ "$colType" == "int" ]]; then
         while ! [[ "$data" =~ ^[0-9]+$ ]]; do
             echo "Invalid data type! Must be an integer."
+            echo -e "$colName ($colType): \c"
+            read data
+        done
+    else
+        while [[ -z "$data" ]] || ! [[ "$data" =~ ^[a-zA-Z]+$ ]]; do
+            echo "Invalid data! Must be non-empty and contain only letters."
             echo -e "$colName ($colType): \c"
             read data
         done

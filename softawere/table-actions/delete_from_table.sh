@@ -9,7 +9,7 @@ fi
 DB_PATH="../../databases/$dbname"
 
 echo "Available tables in '$dbname':"
-ls -1 "$DB_PATH"
+ls -1 "$DB_PATH" | grep -v '_metadata$'
 
 echo "Enter the name of the table you want to delete a row from:"
 read tablename
@@ -28,6 +28,17 @@ cat "$TABLE_FILE"
 
 echo "Enter the primary key value of the row to delete:"
 read pk_value
+
+# Validate primary key value
+if [[ -z "$pk_value" ]]; then
+    echo "Primary key value cannot be empty."
+    exit 1
+fi
+
+if [[ "$pk_value" =~ [^a-zA-Z0-9] ]]; then
+    echo "Primary key value contains invalid characters."
+    exit 1
+fi
 
 # Find the row with the primary key
 row_index=$(awk -F '|' -v pk="$pk_value" '$1 == pk {print NR}' "$TABLE_FILE")

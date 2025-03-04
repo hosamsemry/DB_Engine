@@ -9,15 +9,22 @@ if ! [ -f ../../databases/$dbname/$tablename ]; then
     exit 1
 fi
 
-echo "Enter the column name to select (or * for all columns): "
-read column_name
-
 metadata_file="../../databases/$dbname/${tablename}_metadata"
 table_file="../../databases/$dbname/$tablename"
 
 # Get all column names
 column_names=$(awk -F '|' '{print $1}' "$metadata_file" | tr '\n' ' ')
 num_columns=$(awk 'END{print NR}' "$metadata_file")
+
+# Prompt user to select a column
+echo "Select the column name to select (or * for all columns):"
+select column_name in $column_names "*"; do
+    if [ -n "$column_name" ]; then
+        break
+    else
+        echo "Invalid selection. Please try again."
+    fi
+done
 
 # Function to format and display the table
 format_table() {

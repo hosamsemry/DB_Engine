@@ -31,7 +31,7 @@ while true; do
 echo "What do you want to do?"
 
 PS3="Choose an option: "
-options=("Create a table" "Insert into a table" "Select from a table" "Update a table" "Delete from a table" "Alter table" "Drop table" "Exit")
+options=("Create a table" "Insert into a table" "Select from a table" "Update a table" "Delete from a table" "Drop table" "Exit")
 
 select action in "${options[@]}"
 do
@@ -43,55 +43,24 @@ do
         "Insert into a table")
             ../../softawere/table-actions/insert_into_table.sh
             ;;
-            # read -p "Enter the name of the table you want to insert into: " tablename
-            # read -p "Enter the values you want to insert separated by commas: " values
-            # echo "Values inserted successfully."
-            # ;;
 
         "Select from a table")
             
             ../../softawere/table-actions/select_from_table.sh
             ;;
-            # read -p "Enter the name of the table you want to select from: " tablename
-            # read -p "Enter the columns you want to select separated by commas: " columns
-            # echo "Select query executed successfully."
-            # ;;
 
         "Update a table")
             ../../softawere/table-actions/update_table.sh
             ;;
-            # read -p "Enter the name of the table you want to update: " tablename
-            # read -p "Enter the column you want to update: " column
-            # read -p "Enter the new value: " newvalue
-            # echo "Table updated successfully."
-            # ;;
 
         "Delete from a table")
             ../../softawere/table-actions/delete_from_table.sh
             ;;
             
-            # read -p "Enter the name of the table you want to delete from: " tablename
-            # read -p "Enter the condition for deletion: " condition
-            # echo "Values deleted successfully."
-            # ;;
-
-        "Alter table")
-            echo "Alter table selected."
-            ../../softawere/table-actions/alter_table.sh
-            ;;
-
         "Drop table")
             ../../softawere/table-actions/drop_table.sh
             ;;
-            # read -p "Enter the name of the table you want to drop: " tablename
-            # rm "$tablename" ".$tablename" 2>>./.error.log
-            # if [[ $? == 0 ]]; then
-            #     echo "Table dropped successfully."
-            # else
-            #     echo "Error dropping table $tablename."
-            # fi
-            # ;;
-
+            
         "Exit")
             echo "Exiting..."
             ../../softawere/database.sh

@@ -9,10 +9,16 @@ fi
 DB_PATH="../../databases/$dbname"
 
 echo "Available tables in '$dbname':"
-ls -1 "$DB_PATH"
+ls -1 "$DB_PATH" | grep -v '_metadata$'
 
 echo "Enter the name of the table you want to update:"
 read tablename
+
+# Validate table name
+if [[ -z "$tablename" ]]; then
+    echo "Table name cannot be empty."
+    exit 1
+fi
 
 TABLE_FILE="$DB_PATH/$tablename"
 METADATA_FILE="$DB_PATH/${tablename}_metadata"
@@ -33,6 +39,12 @@ columns=($(awk -F '|' '{print $1}' "$METADATA_FILE"))
 echo "Enter the primary key value of the row to update:"
 read pk_value
 
+# Validate primary key value
+if [[ -z "$pk_value" ]]; then
+    echo "Primary key value cannot be empty."
+    exit 1
+fi
+
 # Find the row with the primary key
 row_index=$(awk -F '|' -v pk="$pk_value" '$1 == pk {print NR}' "$TABLE_FILE")
 
@@ -41,9 +53,9 @@ if [[ -z "$row_index" ]]; then
     exit 1
 fi
 
-# Ask user for new values for each column
-new_values=()
-for ((i = 0; i < ${#columns[@]}; i++)); do
+# Ask user for new values for each column, except the primary key
+new_values=("$pk_value")
+for ((i = 1; i < ${#columns[@]}; i++)); do
     col="${columns[$i]}"
     echo "Enter new value for $col (leave empty to keep current value):"
     read new_value
@@ -59,7 +71,7 @@ done
 # Convert array to string with | separator
 new_row=$(IFS="|"; echo "${new_values[*]}")
 
-# Replace the old row with new values (preserving | separator)
+# Replace the old row with new values 
 awk -F '|' -v row="$row_index" -v new_row="$new_row" 'BEGIN {OFS="|"} {if (NR == row) print new_row; else print}' "$TABLE_FILE" > "$TABLE_FILE.tmp" && mv "$TABLE_FILE.tmp" "$TABLE_FILE"
 
 echo "Row updated successfully."
