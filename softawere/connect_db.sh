@@ -28,48 +28,54 @@ done
 
 
 while true; do
-echo "What do you want to do?"
+    action=$(zenity --list \
+        --title="Database Menu" \
+        --text="What do you want to do?" \
+        --column="Option" \
+        "Create a table" \
+        "Insert into a table" \
+        "Select from a table" \
+        "Update a table" \
+        "Delete from a table" \
+        "Drop table" \
+        "Exit")
 
-PS3="Choose an option: "
-options=("Create a table" "Insert into a table" "Select from a table" "Update a table" "Delete from a table" "Drop table" "Exit")
+    # Handle case when user cancels the Zenity dialog
+    if [[ -z "$action" ]]; then
+        zenity --info --text="No option selected. Exiting..."
+        exit 0
+    fi
 
-select action in "${options[@]}"
-do
-    case "$action" in 
+    case "$action" in
         "Create a table")
             ../../softawere/table-actions/create_table.sh
             ;;
-
         "Insert into a table")
             ../../softawere/table-actions/insert_into_table.sh
             ;;
-
         "Select from a table")
-            
             ../../softawere/table-actions/select_from_table.sh
             ;;
-
         "Update a table")
             ../../softawere/table-actions/update_table.sh
             ;;
-
         "Delete from a table")
             ../../softawere/table-actions/delete_from_table.sh
             ;;
-            
         "Drop table")
             ../../softawere/table-actions/drop_table.sh
             ;;
-            
         "Exit")
-            echo "Exiting..."
-            ../../softawere/database.sh
+        zenity --question --text="Return to main menu?"
+        if [[ $? -eq 0 ]]; then
             break
-            ;;
-        
-        *) 
-            echo "Invalid option, please try again."
+        else
+            continue
+        fi
+        ;;
+
+        *)
+            zenity --error --text="Invalid selection!"
             ;;
     esac
-    done
 done

@@ -9,10 +9,14 @@ fi
 DB_PATH="../../databases/$dbname"
 
 echo "Available tables in '$dbname':"
-ls -1 "$DB_PATH" | grep -v '_metadata$'
-
-echo "Enter the name of the table you want to delete a row from:"
-read tablename
+tables=($(ls -1 "$DB_PATH" | grep -v '_metadata$'))
+select tablename in "${tables[@]}"; do
+    if [[ -n "$tablename" ]]; then
+        break
+    else
+        echo "Invalid selection. Please try again."
+    fi
+done
 
 TABLE_FILE="$DB_PATH/$tablename"
 

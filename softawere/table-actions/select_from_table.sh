@@ -1,8 +1,16 @@
 #!/usr/bin/bash
 
-echo "Select from a table selected."
-echo -e "Table Name: \c"
-read tablename
+echo "Select table."
+
+# List available tables
+tables=$(ls ../../databases/$dbname | grep -v '_metadata')
+select tablename in $tables; do
+    if [ -n "$tablename" ]; then
+        break
+    else
+        echo "Invalid selection. Please try again."
+    fi
+done
 
 if ! [ -f ../../databases/$dbname/$tablename ]; then
     echo "Table '$tablename' does not exist. Please create the table first."

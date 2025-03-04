@@ -2,8 +2,21 @@
 
 echo "Insert into a table selected."
 
-echo -e "Table Name: \c"
-read tablename
+# List available tables and prompt user to select one
+tables=($(ls ../../databases/$dbname | grep -v '_metadata$'))
+if [ ${#tables[@]} -eq 0 ]; then
+    echo "No tables found in the database. Please create a table first."
+    exit 1
+fi
+
+echo "Select the table you want to insert into:"
+select tablename in "${tables[@]}"; do
+    if [[ -n "$tablename" ]]; then
+        break
+    else
+        echo "Invalid selection. Please try again."
+    fi
+done
 
 if ! [ -f ../../databases/$dbname/$tablename ]; then
     echo "Table '$tablename' does not exist. Please create the table first."
@@ -52,18 +65,21 @@ for (( i = 2; i <= $colsNum; i++ )); do
     echo -e "$colName ($colType): \c"
     read data
 
-    if [[ "$colType" == "int" ]]; then
+    if [[ "$colType" == "INT" ]]; then
         while ! [[ "$data" =~ ^[0-9]+$ ]]; do
             echo "Invalid data type! Must be an integer."
             echo -e "$colName ($colType): \c"
             read data
         done
-    else
+    elif [[ "$colType" == "VARCHAR" ]]; then
         while [[ -z "$data" ]] || ! [[ "$data" =~ ^[a-zA-Z]+$ ]]; do
             echo "Invalid data! Must be non-empty and contain only letters."
             echo -e "$colName ($colType): \c"
             read data
         done
+    else
+        echo "Unknown column type '$colType'."
+        exit 1
     fi
 
     row+="$data$sep"
